@@ -18,6 +18,6 @@ LEGAJO = "16573"
 MATERIA = "Mat2"
 
 Resultados: 
-AgregarAlumno() ----------------> Carga exitosa
-AgregarMateria() ---------------> Carga exitosa
-RealizarInscripcion() ----------> Inscripción exitosa
+AgregarAlumno() : Carga exitosa
+AgregarMateria() : Carga exitosa
+RealizarInscripcion() : Inscripción exitosa
