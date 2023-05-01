@@ -1,0 +1,50 @@
+package com.mycompany.PracticasUTNJava;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Materia {
+
+    private String nombre;
+    private ArrayList<String> correlativas;
+
+    public Materia(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Materia(String nombre, ArrayList<String> correlativas) {
+        this.nombre = nombre;
+        this.correlativas = new ArrayList<String>();
+        this.correlativas = correlativas;
+    }
+
+    public boolean puedeCursar(Alumno alumno) {
+        boolean cumple = false;
+        if((!alumno.getMateriasAprobadas().contains(this.getNombre())) && (alumno.getMateriasAprobadas().containsAll(this.getCorrelativas()))) {
+        	cumple = true;
+        }
+        return cumple;
+    }
+
+    public static boolean esAprobada(Materia correlativa, List<Materia> materiasAprobadas) {
+        return materiasAprobadas.contains(correlativa);
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setCorrelativas(ArrayList<String> correlativas) {
+        this.correlativas = correlativas;
+    }
+
+    public ArrayList<String> getCorrelativas() {
+        return correlativas;
+    }
+    
+    
+}

@@ -1,0 +1,160 @@
+package com.mycompany.PracticasUTNJava;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.HashMap;
+
+/**
+ *
+ * @author makom
+ */
+public class OperacionesMenu {
+    
+    public void menuPrincipal() throws SQLException, IOException {   
+        // Creo el objeto Manejar para operar en la bd
+        ManejadorBD manejador = new ManejadorBD();
+        //resultados
+        Object[] datosIngresados;
+        // Menu inicial
+        Object[] opciones = {"Realizar una inscripcion", "Agregar Alumnos/Materias"};
+        int seleccion = JOptionPane.showOptionDialog(null, "Elija una opción",
+                "Menú", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, opciones, opciones[0]);
+        if(seleccion == 0) {
+            // formulario para ingresar nombre legajo y el nombre de la materia
+            datosIngresados = this.menuIngresarDatosInscripcion();
+            // verificar el legajo ingresado, y realizar proceso de inscripcion
+            if(legajoValido((String) datosIngresados[1])){
+                //si el legajo es valido, busco en la bd si existe el alumno 
+                if(manejador.existeAlumno(datosIngresados)) {
+                    // traigo de la bd la lista de mat aprob y la lista de correl de la materia en cuestion
+                    HashMap<String, ArrayList<String>> materiasCorrelativas = deserializarJson((String) datosIngresados[2], "correlativas", "Materias", "nombre");
+                    HashMap<String, ArrayList<String>> materiasAprobadas = deserializarJson((String) datosIngresados[1], "materias_aprobadas", "Alumnos", "legajo");
+                    Alumno alumno = new Alumno((String) datosIngresados[0],(String) datosIngresados[1], materiasAprobadas.get(datosIngresados[1]));
+                    Materia materia = new Materia((String) datosIngresados[2], materiasCorrelativas.get((String) datosIngresados[2]));
+                    if(materia.puedeCursar(alumno)) {
+                    	JOptionPane.showMessageDialog(null, "Inscripción realizada con exito");
+                    }else {
+                    	JOptionPane.showMessageDialog(null, "Inscripción rechazada");
+                    }
+                }else{
+                    //inscripcion rechazada
+                    JOptionPane.showMessageDialog(null, "Inscripción rechazada, el alumno ingresado no existe.");
+                }
+                    
+            }
+        } else {
+            // otro menú de opciones para seleccionar entre agregar un alumno o una materia
+            Object[] opciones2 = {"Agregar Alumno", "Agregar Materia"};
+            seleccion = JOptionPane.showOptionDialog(null, "Elija una opción",
+                    "Menú", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                    null, opciones2, opciones2[0]);
+            if(seleccion == 0){
+                this.menuIngresarDatosAlumno();
+            }else{
+                this.menuIngresarDatosMateria();
+            }
+        }
+    }
+    
+    public Object[] menuIngresarDatosMateria(){
+        String nombre = JOptionPane.showInputDialog("Ingrese el nombre de la materia");
+        Object[] datos = {nombre};
+        return datos;
+    }
+    public Object[] menuIngresarDatosAlumno()
+    {
+        // Creamos el panel grafico
+        JPanel panel = new JPanel();
+        // añadimos texto al panel
+        panel.add(new JLabel("Nombre:"));
+        // añadimos un inputText al panel
+        JTextField nombreField = new JTextField(10);
+        panel.add(nombreField);
+        panel.add(new JLabel("Legajo:"));
+        JTextField legajoField = new JTextField(10);
+        panel.add(legajoField);
+
+        // Mostramos el cuadro de diálogo con el panel personalizado
+        int opcion = JOptionPane.showOptionDialog(null, panel, "Ingrese los datos", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, new String[]{"Aceptar", "Cancelar"}, "Aceptar");
+
+        // Si se hace clic en Aceptar, obtenemos los valores ingresados
+        if (opcion == JOptionPane.OK_OPTION) {
+            Object[] datos = {nombreField.getText(), legajoField.getText()};
+            return datos;
+        }
+        return null;
+    }
+    
+    
+    public Object[] menuIngresarDatosInscripcion(){
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Nombre:"));
+        JTextField nombreField = new JTextField(10);
+        panel.add(nombreField);
+        panel.add(new JLabel("Legajo:"));
+        JTextField legajoField = new JTextField(10);
+        panel.add(legajoField);
+        panel.add(new JLabel("Materia:"));
+        JTextField materiaField = new JTextField(10);
+        panel.add(materiaField);
+
+        // Mostramos el cuadro de diálogo con el panel personalizado
+        int opcion = JOptionPane.showOptionDialog(null, panel, "Ingrese los datos", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, new String[]{"Aceptar", "Cancelar"}, "Aceptar");
+
+        // Si se hace clic en Aceptar, obtenemos los valores ingresados
+        if (opcion == JOptionPane.OK_OPTION) {
+            Object[] datos = {nombreField.getText(), legajoField.getText(), materiaField.getText()};
+            return datos;
+        }
+        return null;
+    }
+
+    private boolean legajoValido(String legajo) {
+        String regex = "[0-9]{5}";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(legajo);
+        if(matcher.matches()) {
+            return true;
+        }else{
+            return false;
+        }
+    }
+    
+    public HashMap<String, ArrayList<String>> deserializarJson(String aBuscar, String nombreColumnaDeserializar, String nombreTabla, String nombreColumnaCondicion) throws SQLException, JsonProcessingException, IOException{
+        Connection conectar = null;
+        Conexion conexion = new Conexion();
+        // creo el objeto objectMapper para poder serializar o deserializar objetos JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        // invocamos a la funcion para que permita que un unico valor se trate como a una matriz
+        objectMapper.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        HashMap<String, ArrayList<String>> datosHash = new HashMap<>();
+        conectar = conexion.establecerConexion();
+        Statement stmt = conexion.conectar.createStatement();
+        //tomo la materia que se ingresó y su lista de correlativas
+        ResultSet rs = stmt.executeQuery("SELECT * FROM " + nombreTabla + " WHERE " + nombreColumnaCondicion + " = \"" + aBuscar + "\"";
+        if(rs.next()){
+            // cargamos en jsonText el json de la BD usando el nombre de la columna
+            String jsonText = objectMapper.writeValueAsString(rs.getString(nombreColumnaDeserializar));
+            ArrayList<String> nombresMaterias = objectMapper.readValue(jsonText,ArrayList.class);
+            datosHash.put(aBuscar, nombresMaterias);
+        }
+        conectar.close();
+        return datosHash; 
+    }
+}

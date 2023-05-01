@@ -1,0 +1,39 @@
+package com.mycompany.PracticasUTNJava;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Alumno {
+
+    private String nombre;
+    private String legajo;
+    private ArrayList<String> materiasAprobadas;
+
+    public Alumno() {
+    }
+
+    public Alumno(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Alumno(String nombre, String legajo, ArrayList<String> materiasAprobadas) {
+        this.nombre = nombre;
+        this.legajo = legajo;
+        this.materiasAprobadas = new ArrayList<String>();
+        this.materiasAprobadas = materiasAprobadas;
+    }
+
+    
+
+    public ArrayList<String> getMateriasAprobadas() {
+        return this.materiasAprobadas;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+}

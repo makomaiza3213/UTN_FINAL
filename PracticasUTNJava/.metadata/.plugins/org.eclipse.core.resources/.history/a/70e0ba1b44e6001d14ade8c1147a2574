@@ -1,0 +1,38 @@
+package com.mycompany.PracticasUTNJava;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import javax.swing.JOptionPane;
+
+public class Conexion {
+
+    Connection conectar = null;
+
+    String usuario = "root";
+    String contraseña = "multihero0.96";
+    String bd = "Universidad";
+    String ip = "localhost";
+    String puerto = "3306";
+
+    String ruta = "jdbc:mysql://" + ip + ":" + puerto + "/" + bd;
+
+    public Connection establecerConexion() {
+
+        try {
+            // carga el controlador de la base de datos , creo q es el DBMS
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            // estable la conexion con la base de datos utilizando la ruta usuario y contraseña
+            conectar = DriverManager.getConnection(ruta, usuario, contraseña);
+            
+            JOptionPane.showMessageDialog(null, "Se conecto correctamente");
+            
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(null, "NO se conecto correctamente" + e);
+
+        }
+
+        return conectar;
+    }
+}

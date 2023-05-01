@@ -1,0 +1,30 @@
+package com.mycompany.PracticasUTNJava;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class ManejadorBD {
+    public void agregarMateria () {
+        
+    }
+    
+    public void agregarAlumno() {
+        
+    }
+    
+    public boolean existeAlumno(Object[] datos) throws SQLException {
+        //establecer conexión
+        Conexion conexion = new Conexion();
+        //creamos una variable de tipo Connection para poder cerrar la conexión luego de haber operado
+        Connection conectar = conexion.establecerConexion();
+        //operamos con la base de datos
+        Statement stmt = conectar.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT EXISTS(SELECT 1 FROM Alumnos WHERE nombre = '" +
+                                        datos[0] + "' AND legajo = '" + datos[1] + "')");
+        //cerramos la conexión
+        conectar.close();
+        return rs.next();
+    }
+}

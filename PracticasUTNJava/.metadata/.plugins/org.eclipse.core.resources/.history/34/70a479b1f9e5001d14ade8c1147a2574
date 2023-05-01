@@ -1,0 +1,18 @@
+package com.mycompany.PracticasUTNJava;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
+
+public class Final{
+
+    public static void main(String[] args) throws SQLException, IOException {
+                        
+        //creamos el menú de dialogo para solicitar una operacion
+        OperacionesMenu menu = new OperacionesMenu();
+        menu.menuPrincipal();
+        
+        
+    }
+}
