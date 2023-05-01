@@ -56,7 +56,7 @@ public class OperacionesMenu {
                                 (String) datosIngresados[2]);
                         if (exito == 1) {
                             JOptionPane.showMessageDialog(null,
-                                    "El alumno " + (String) datosIngresados[0] + " ah sido cargado con exito");
+                                    "El alumno " + (String) datosIngresados[0] + " ha sido cargado con exito");
                         }
                     } else {
                         JOptionPane.showMessageDialog(null, "El alumno ya se encuentra cargado.", null,
@@ -103,20 +103,18 @@ public class OperacionesMenu {
                 JOptionPane.PLAIN_MESSAGE, null, new String[]{"Aceptar", "Cancelar"}, "Aceptar");
         // verificar que el legajo posea 5 dígitos numéricos
         if (this.legajoValido(legajoField.getText())) {
-            // menú para ingresar el nombre de todas las materias aprobadas que tenga el
-            // alumno
-            ArrayList<String> materias = this.ingresarNombresMaterias((Integer) spinner.getValue());
-
-            if (materias != null) {
-                // convierto la lista de materias ingresadas al formato JSON con GSON para
-                // mandarlo a la BD
-                String materiasJson = this.convertirAJson(materias);
-                // obtenemos los valores ingresados
-                Object[] datos = {nombreField.getText(), legajoField.getText(), materiasJson};
-                return datos;
-            } else {
-                return null;
+            ArrayList<String> materias = new ArrayList<String>();
+            if ((int) spinner.getValue() != 0) {
+                // menú para ingresar el nombre de todas las materias aprobadas que tenga el
+                // alumno
+                materias = this.ingresarNombresMaterias((Integer) spinner.getValue());
             }
+            // convierto la lista de materias ingresadas al formato JSON con GSON para
+            // mandarlo a la BD
+            String materiasJson = this.convertirAJson(materias);
+            // obtenemos los valores ingresados
+            Object[] datos = {nombreField.getText(), legajoField.getText(), materiasJson};
+            return datos;
         } else {
             JOptionPane.showMessageDialog(null, "Legajo invalido");
             return null;
@@ -138,18 +136,18 @@ public class OperacionesMenu {
         JOptionPane.showOptionDialog(null, panel, "Ingrese los datos", JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE, null, new String[]{"Aceptar", "Cancelar"}, "Aceptar");
         if (!manejador.existeMateria(nombreField.getText())) {
-            ArrayList<String> materias = this.ingresarNombresMaterias((Integer) spinner.getValue());
-            if (materias != null) {
-                String materiasJson = this.convertirAJson(materias);
-                Object[] datos = {nombreField.getText(), materiasJson};
-                return datos;
-            } else {
-                return null;
+            ArrayList<String> materias = new ArrayList<String>();
+            if ((int) spinner.getValue() != 0) {
+                materias = this.ingresarNombresMaterias((Integer) spinner.getValue());
             }
+            String materiasJson = this.convertirAJson(materias);
+            Object[] datos = {nombreField.getText(), materiasJson};
+            return datos;
         } else {
             JOptionPane.showMessageDialog(null, "La materia ya se encuentra cargada");
             return null;
         }
+
     }
 
     public String convertirAJson(ArrayList<String> materias) {
@@ -230,40 +228,44 @@ public class OperacionesMenu {
         // verificar el legajo ingresado, y realizar proceso de inscripcion
         if (legajoValido((String) datosIngresados[1])) {
             // si el legajo es valido, busco en la bd si existe el alumno
-            if (manejador.existeAlumno(datosIngresados)) {
-                // traigo de la bd la lista de mat aprob y la lista de correl de la materia en
-                // cuestion
-                HashMap<String, ArrayList<String>> materiasCorrelativas = manejador
-                        .deserializarJson((String) datosIngresados[2], "correlativas", "Materias", "nombre");
-                HashMap<String, ArrayList<String>> materiasAprobadas = manejador
-                        .deserializarJson((String) datosIngresados[1], "materias_aprobadas", "Alumnos", "legajo");
-                Alumno alumno = new Alumno((String) datosIngresados[0], (String) datosIngresados[1],
-                        materiasAprobadas.get((String) datosIngresados[1]));
-                Materia materia = new Materia((String) datosIngresados[2],
-                        materiasCorrelativas.get((String) datosIngresados[2]));
-                LocalDate ahora = LocalDate.now();
-                Inscripcion inscripcion = new Inscripcion(alumno, materia, ahora);
-                // si la materia no tiene correlativas y no la ah aprobada aún, la inscripcion es exitosa
-                if (!materiasAprobadas.isEmpty() && materiasCorrelativas.isEmpty()) {
-                    if (inscripcion.getMateria().noCursaLaMateria(alumno)) {
-                        inscripcion.setAprobada(true);
-                        JOptionPane.showMessageDialog(null, "Inscripción realizada con exito");
-                    } else {
-                        inscripcion.setAprobada(false);
-                        JOptionPane.showMessageDialog(null, "Inscripcion rechazada");
+            if (manejador.existeMateria((String) datosIngresados[2])) {
+                if (manejador.existeAlumno(datosIngresados)) {
+                    // traigo de la bd la lista de mat aprob y la lista de correl de la materia en
+                    // cuestion
+                    HashMap<String, ArrayList<String>> materiasCorrelativas = manejador
+                            .deserializarJson((String) datosIngresados[2], "correlativas", "Materias", "nombre");
+                    HashMap<String, ArrayList<String>> materiasAprobadas = manejador
+                            .deserializarJson((String) datosIngresados[1], "materias_aprobadas", "Alumnos", "legajo");
+                    Alumno alumno = new Alumno((String) datosIngresados[0], (String) datosIngresados[1],
+                            materiasAprobadas.get((String) datosIngresados[1]));
+                    Materia materia = new Materia((String) datosIngresados[2],
+                            materiasCorrelativas.get((String) datosIngresados[2]));
+                    LocalDate ahora = LocalDate.now();
+                    Inscripcion inscripcion = new Inscripcion(alumno, materia, ahora);
+                    // si la materia no tiene correlativas y no la ah aprobada aún, la inscripcion es exitosa
+                    if (!materiasAprobadas.isEmpty() && materiasCorrelativas.isEmpty()) {
+                        if (inscripcion.getMateria().noCursaLaMateria(alumno)) {
+                            inscripcion.setAprobada(true);
+                            JOptionPane.showMessageDialog(null, "Inscripción realizada con exito");
+                        } else {
+                            inscripcion.setAprobada(false);
+                            JOptionPane.showMessageDialog(null, "Inscripcion rechazada");
+                        }
+                    } else if (!materiasAprobadas.isEmpty() && !materiasCorrelativas.isEmpty()) {
+                        if (inscripcion.getMateria().puedeCursar(alumno)) {
+                            inscripcion.setAprobada(true);
+                            JOptionPane.showMessageDialog(null, "Inscripción realizada con exito");
+                        } else {
+                            inscripcion.setAprobada(false);
+                            JOptionPane.showMessageDialog(null, "Inscripción rechazada");
+                        }
                     }
-                } else if (!materiasAprobadas.isEmpty() && !materiasCorrelativas.isEmpty()) {
-                    if (inscripcion.getMateria().puedeCursar(alumno)) {
-                        inscripcion.setAprobada(true);
-                        JOptionPane.showMessageDialog(null, "Inscripción realizada con exito");
-                    } else {
-                        inscripcion.setAprobada(false);
-                        JOptionPane.showMessageDialog(null, "Inscripción rechazada");
-                    }
+                } else {
+                    // inscripcion rechazada
+                    JOptionPane.showMessageDialog(null, "Inscripción rechazada, el alumno ingresado no existe.");
                 }
             } else {
-                // inscripcion rechazada
-                JOptionPane.showMessageDialog(null, "Inscripción rechazada, el alumno ingresado no existe.");
+                JOptionPane.showMessageDialog(null, "Inscripción rechazada, la materia ingresada no existe.");
             }
         } else {
             JOptionPane.showMessageDialog(null, "LEGAJO INVÁLIDO.");
